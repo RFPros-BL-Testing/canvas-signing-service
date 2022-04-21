@@ -1,0 +1,30 @@
+{
+  "name": "canvas-device-owner",
+  "version": "1.0.1",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "test": "jest --silent --testPathIgnorePatterns e2e",
+    "jest": "./node_modules/.bin/jest"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^3.2.1",
+    "axios": "^0.24.0",
+    "@aws-sdk/client-ssm": "^3.44.0"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-api-gateway": "^3.41.0",
+    "aws-sdk-client-mock": "^0.5.6",
+    "chance": "^1.1.8",
+    "jest": "^27.3.1",
+    "jest-mock-axios": "^4.4.1"
+  }
+}

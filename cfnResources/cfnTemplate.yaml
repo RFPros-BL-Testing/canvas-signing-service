@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Device Management Signing Api
+Parameters:
+  ApplicationName:
+    Type: String
+  # BucketName:
+  #   Type: String
+  Environment:
+    Type: String
+  FileServiceApi:
+    Type: String
+    Default: https://canvas-dev-internal.salticidae.net/fs/
+  # IotRegion:
+  #   Type: String
+  #   Default: us-east-1
+  # MQTTEnvironment:
+  #   Type: String
+  #   Default: ""
+  # ObjectKey:
+  #   Type: String
+  OutpostBucketName:
+    Type: String
+    Default: ""
+  # SdkLayerArn:
+  #   Type: String
+  #   Default: "arn:aws:lambda:us-east-1:278482835815:layer:aws-sdk-v3:2"
+  SigningImageUri:
+    Type: String
+  # Stack:
+  #   Type: String
+
+Resources:
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ApplicationName}-${Environment}-lambda-execution-role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - apigateway.amazonaws.com
+                - events.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: !Sub /${ApplicationName}/
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      # - arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess
+      # - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+      # - arn:aws:iam::aws:policy/AWSIoTFullAccess
+      Policies:
+        - PolicyName: LambdaExecutionRole
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - ssm:*
+                Resource: "*"
+              - Effect: Allow
+                Action: logs:CreateLogGroup
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource:
+                  - !Sub arn:aws:s3:::${OutpostBucketName}
+                  - !Sub arn:aws:s3:::${OutpostBucketName}/*
+
+  # Lambda Functions
+  SignFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Join ["_", ["SignFunction", !Ref Environment]]
+      Code:
+        ImageUri: !Ref SigningImageUri
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 300
+      Environment:
+        Variables:
+          Environment: !Ref Environment
+          FileServiceApi: !Ref FileServiceApi
+
+  SignFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DependsOn: "SignFunction"
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Join ["", ["/aws/lambda/", !Ref SignFunction]]

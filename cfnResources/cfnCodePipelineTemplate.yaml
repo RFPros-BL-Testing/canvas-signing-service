@@ -1,0 +1,207 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: single pipeline template for stack
+Parameters:
+  # ApiRepositoryName:
+  #   Type: String
+  # ApiRepositoryBranch:
+  #   Type: String
+  ApplicationName:
+    Type: String
+  ArtifactBucketName:
+    Type: String
+  BuildSpecPath:
+    Type: String
+    Default: buildspec.yml
+  CfnTemplatePath:
+    Type: String
+    Default: cfnTemplate.yaml
+  CloudFormationDeploymentRoleArn:
+    Type: String
+  CodeBuildProjectRoleArn:
+    Type: String
+  EcrRepositoryArn:
+    Type: String
+  Environment:
+    Type: String
+  KMSKeyArn:
+    Type: String
+  OutpostBucketName:
+    Type: String
+  PipeLineRoleArn:
+    Type: String
+  ResourceGroup:
+    Type: String
+  # SdkLayerArn:
+  #   Type: String
+  # SslDomainName:
+  #   Type: String
+  #   Default: ""
+  # TestApiKey:
+  #   Type: String
+  #   Default: ""
+  # ConnectionArn:
+  #   Type: String
+  # FullRepositoryId:
+  #   Type: String
+
+Resources:
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub ${ApplicationName}-${Environment}
+      ServiceRole: !Ref CodeBuildProjectRoleArn
+      EncryptionKey: !Ref KMSKeyArn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: Environment
+            Value: !Ref Environment
+          - Name: IMAGE_REPO_NAME
+            Value: !Select [1, !Split ["/", !Ref EcrRepositoryArn]]
+          - Name: AWS_ACCOUNT_ID
+            Value: !Ref AWS::AccountId
+          - Name: ContainerName
+            Value: !Sub ${ApplicationName}
+          - Name: DockerUsername
+            Type: PARAMETER_STORE
+            Value: /${Environment}/dockerhub/username
+          - Name: DockerPassword
+            Type: PARAMETER_STORE
+            Value: /${Environment}/dockerhub/password
+
+      Source:
+        BuildSpec: !Ref BuildSpecPath
+        Type: CODEPIPELINE
+      Tags:
+        - Key: ResourceGroup
+          Value: !Ref ResourceGroup
+      TimeoutInMinutes: 15
+
+  # CodeBuildTestProject:
+  #   Type: AWS::CodeBuild::Project
+  #   Properties:
+  #     Name: !Sub ${ApplicationName}-e2eTest-${Environment}
+  #     ServiceRole: !Ref CodeBuildProjectRoleArn
+  #     EncryptionKey: !Ref KMSKeyArn
+  #     Artifacts:
+  #       Type: CODEPIPELINE
+  #     Environment:
+  #       ComputeType: BUILD_GENERAL1_SMALL
+  #       Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+  #       Type: LINUX_CONTAINER
+  #       EnvironmentVariables:
+  #         - Name: SslDomainName
+  #           Value: !Ref SslDomainName
+  #           Type: PLAINTEXT
+  #         - Name: TestApiKey
+  #           Value: !Ref TestApiKey
+  #           Type: PLAINTEXT
+  #     Source:
+  #       BuildSpec: buildspec_test.yml
+  #       Type: CODEPIPELINE
+  #     Tags:
+  #       - Key: ResourceGroup
+  #         Value: !Ref ResourceGroup
+  #     TimeoutInMinutes: 15
+
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn: !Ref PipeLineRoleArn
+      Name: !Ref AWS::StackName
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Api
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeStarSourceConnection
+              Configuration:
+                ConnectionArn: !Ref ConnectionArn
+                FullRepositoryId: !Ref FullRepositoryId # some-user/my-repo
+                BranchName: !Sub CDO-${Environment}
+              OutputArtifacts:
+                - Name: ApiSourceArtifact
+              RunOrder: 1
+
+        - Name: BuildApis
+          Actions:
+            - Name: BuildApi
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref CodeBuildProject
+              RunOrder: 1
+              InputArtifacts:
+                - Name: ApiSourceArtifact
+              OutputArtifacts:
+                - Name: ApiBuildArtifact
+        - Name: Approval
+          Actions:
+            - Name: ApproveDeploy
+              ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Version: 1
+                Provider: Manual
+        - Name: Deploy
+          Actions:
+            - Name: DeployApi
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              RunOrder: 1
+              InputArtifacts:
+                - Name: ApiBuildArtifact
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND,CAPABILITY_NAMED_IAM
+                RoleArn: !Ref CloudFormationDeploymentRoleArn
+                StackName: !Sub CICD-${ApplicationName}-${Environment}
+                TemplatePath: !Sub ApiBuildArtifact::${CfnTemplatePath}
+                ParameterOverrides: !Sub |
+                  {"Environment":"${Environment}",
+                  "OutpostBucketName":"${OutpostBucketName}",
+                  "ApplicationName":"${ApplicationName}",
+                  "SigningImageUri":{"Fn::GetArtifactAtt":["ApiBuildArtifact","imageUri"]}}
+        # - Name: Approval2
+        #   Actions:
+        #     - Name: ApproveDeploy
+        #       ActionTypeId:
+        #         Category: Approval
+        #         Owner: AWS
+        #         Version: 1
+        #         Provider: Manual
+        # - Name: TestApis
+        #   Actions:
+        #     - Name: E2ETest
+        #       ActionTypeId:
+        #         Category: Test
+        #         Owner: AWS
+        #         Version: 1
+        #         Provider: CodeBuild
+        #       Configuration:
+        #         ProjectName: !Ref CodeBuildTestProject
+        #       RunOrder: 1
+        #       InputArtifacts:
+        #         - Name: ApiSourceArtifact
+        #       # OutputArtifacts:
+        #       #   - Name: ApiBuildArtifact
+      ArtifactStore:
+        Type: S3
+        Location: !Ref ArtifactBucketName
+        EncryptionKey:
+          Id: !Ref KMSKeyArn
+          Type: KMS

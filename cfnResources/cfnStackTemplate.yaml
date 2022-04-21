@@ -1,0 +1,56 @@
+# When running this in a new account.
+# The account must be added to trust relationships in
+# arn:aws:iam::535625058381:role/bluegrass-codecommit-cross-account-role
+
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Canvas - Service
+
+Parameters:
+  AccountPrefix:
+    Type: String
+  ApplicationName:
+    Type: String
+  ArtifactBucketName:
+    Type: String
+
+  Environment:
+    Type: String
+  ConnectionArn:
+    Type: String
+  OutpostBucketName:
+    Type: String
+  Stack:
+    Type: String
+
+Resources:
+  # Main API Stack
+  ApiPipelineStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        # ApiRepositoryBranch: !Ref Environment
+        # ApiRepositoryName: !Ref ApplicationName
+        ApplicationName: !Ref ApplicationName
+        ArtifactBucketName: !Ref ArtifactBucketName
+        CloudFormationDeploymentRoleArn:
+          Fn::ImportValue: !Sub ${Stack}-common-${Environment}-CloudFormationDeploymentRoleArn
+        CodeBuildProjectRoleArn:
+          Fn::ImportValue: !Sub ${Stack}-common-${Environment}-CodeBuildProjectRoleArn
+        EcrRepositoryArn: !Sub ${AWS::AccountID}.dkr.ecr.${AWS::Region}.amazonaws.com/${ApplicationName}:latest
+        Environment: !Ref Environment
+        # ConnectionArn: !Ref ConnectionArn
+        # FullRepositoryId: !Sub RFPros-BL-Testing/${ApplicationName}
+        KMSKeyArn:
+          Fn::ImportValue: !Sub ${Stack}-common-${Environment}-KMSKeyArn
+        OutpostBucketName: !Ref OutpostBucketName
+        PipeLineRoleArn:
+          Fn::ImportValue: !Sub ${Stack}-common-${Environment}-CodePipelineRoleArn
+        # SdkLayerArn:
+        #   Fn::ImportValue: !Sub ${Stack}-common-${Environment}-SdkLambdaLayerArn
+        ResourceGroup: !Sub ${Stack}-${Environment}
+      Tags:
+        - Key: ResourceGroup
+          Value: !Sub ${Stack}-${Environment}
+      TemplateURL: !Sub https://${ArtifactBucketName}.s3.amazonaws.com/cloudformation/cfnCodePipelineTemplate.yaml
+      TimeoutInMinutes: 5

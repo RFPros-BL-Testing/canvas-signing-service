@@ -1,0 +1,59 @@
+from archlinux
+
+USER root
+WORKDIR /opt
+
+RUN pacman -Syu --noconfirm
+RUN pacman -S git python3 cmake ninja gperf ccache dfu-util dtc wget \
+    python-pip python-setuptools python-wheel tk xz file make which --noconfirm
+
+RUN wget -q https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.13.2/zephyr-sdk-0.13.2-linux-x86_64-setup.run \
+&& chmod +x zephyr-sdk-0.13.2-linux-x86_64-setup.run \
+&& ./zephyr-sdk-0.13.2-linux-x86_64-setup.run -- -d /opt/zephyr-sdk-0.13.2 \
+
+# # Remove everything we don't need
+&& rm -rf /opt/zephyr-sdk-0.13.2/*-elf \
+&& rm -rf /opt/zephyr-sdk-0.13.2/xtensa \
+&& rm -rf /opt/zephyr-sdk-0.13.2/sysroots/ \
+&& rm -rf zephyr-sdk-0.13.2-linux-x86_64-setup.run
+
+RUN pip3 install --user -U west \
+&& pip3 install --user cmake \
+&& pip3 install --user -r ~/zephyr-workspace/zephyr/scripts/requirements.txt
+
+WORKDIR /root
+RUN mkdir zephyr-work-space
+WORKDIR /root/zephyr-work-space
+
+# git clone zephy source
+RUN pip3 install --user -r /zephyr/scripts/requirements.txt
+&& /root/.local/bin/west init \
+&& /root/.local/bin/west update
+
+
+# RUN /root/.local/bin/west 
+
+
+# RUN wget -q https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.14.0/toolchain_linux-x86_64_arm-zephyr-eabi.tar.gz
+# RUN wget -q https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.14.0/hosttools_linux-x86_64.tar.gz
+
+# RUN tar -xf toolchain_linux-x86_64_arm-zephyr-eabi.tar.gz
+# RUN tar -xf hosttools_linux-x86_64.tar.gz
+# RUN mv arm-zephyr-eabi ./zephyr-sdk/
+
+
+# signing 
+# bootloader/mcuboot/scripts/imgtool.py
+# https://github.com/zephyrproject-rtos/mcuboot/tree/main/scripts
+
+# cd /Users/ryan/git/zephyr_workspace/ble_gateway_dm_firmware/build/pinnacle_100_dvk/modules/mcuboot
+
+# /Users/ryan/zephyr-sdk-0.14.0/arm-zephyr-eabi/bin/arm-zephyr-eabi-objcopy --input-target=ihex --output-target=binary --gap-fill=0xff \
+# /Users/ryan/git/zephyr_workspace/ble_gateway_dm_firmware/build/pinnacle_100_dvk/zephyr/mcuboot_primary_app.hex \
+# /Users/ryan/git/zephyr_workspace/ble_gateway_dm_firmware/build/pinnacle_100_dvk/zephyr/app_to_sign.bin
+
+# /usr/local/opt/python@3.9/bin/python3.9 /Users/ryan/git/zephyr_workspace/bootloader/mcuboot/scripts/imgtool.py sign --key /Users/ryan/git/zephyr_workspace/bootloader/mcuboot/root-ec-p256.pem \
+# --header-size 0x200 --align 4 --version 0.1.0+1648052719 --pad-header --slot-size 0xd6000 \
+# /Users/ryan/git/zephyr_workspace/ble_gateway_dm_firmware/build/pinnacle_100_dvk/zephyr/app_to_sign.bin \
+# /Users/ryan/git/zephyr_workspace/ble_gateway_dm_firmware/build/pinnacle_100_dvk/zephyr/app_update.bin
+
