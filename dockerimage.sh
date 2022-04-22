@@ -12,6 +12,6 @@ docker build -t $IMAGE_REPO_NAME:latest .
 docker tag $IMAGE_REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
 
 # $(aws ecr get-login --no-include-email --region $AWS_REGION)
-aws ecr get-login-password --region $AWS_REGION --profile $PROFILE| docker login --username AWS  --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+aws ecr get-login-password --region $AWS_REGION --profile $PROFILE| docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
 

@@ -64,10 +64,7 @@ exports.handler = (event, context, callback) => {
                 `/tmp/${file.name}`,
                 `/tmp/${file.name}`.replace(hexTest, ".bin"),
               ];
-              const imgcopyProcess = spawn(
-                `${__dirname}/scripts/imgcopy`,
-                parameters
-              );
+              const imgcopyProcess = spawn(`${__dirname}/imgcopy`, parameters);
               const stderr = [];
               const stdout = [];
               imgcopyProcess.stdout.on("data", (data) => {
@@ -104,10 +101,7 @@ exports.handler = (event, context, callback) => {
           `/tmp/${file.name}`,
           `/tmp/${file.name}.signed`,
         ];
-        const imgtoolProcess = spawn(
-          `${__dirname}/scripts/python3 imgtool.py`,
-          parameters
-        );
+        const imgtoolProcess = spawn(`${__dirname}/imgtool`, parameters);
         const stderr = [];
         const stdout = [];
         imgtoolProcess.stdout.on("data", (data) => {

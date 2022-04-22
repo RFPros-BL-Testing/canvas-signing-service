@@ -13,7 +13,6 @@ Parameters:
     Type: String
   ArtifactBucketName:
     Type: String
-
   Environment:
     Type: String
   ConnectionArn:
@@ -37,10 +36,10 @@ Resources:
           Fn::ImportValue: !Sub ${Stack}-common-${Environment}-CloudFormationDeploymentRoleArn
         CodeBuildProjectRoleArn:
           Fn::ImportValue: !Sub ${Stack}-common-${Environment}-CodeBuildProjectRoleArn
-        EcrRepositoryArn: !Sub ${AWS::AccountID}.dkr.ecr.${AWS::Region}.amazonaws.com/${ApplicationName}:latest
+        EcrRepositoryArn: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ApplicationName}
         Environment: !Ref Environment
-        # ConnectionArn: !Ref ConnectionArn
-        # FullRepositoryId: !Sub RFPros-BL-Testing/${ApplicationName}
+        ConnectionArn: !Ref ConnectionArn
+        FullRepositoryId: !Sub RFPros-BL-Testing/${ApplicationName}
         KMSKeyArn:
           Fn::ImportValue: !Sub ${Stack}-common-${Environment}-KMSKeyArn
         OutpostBucketName: !Ref OutpostBucketName
@@ -49,6 +48,7 @@ Resources:
         # SdkLayerArn:
         #   Fn::ImportValue: !Sub ${Stack}-common-${Environment}-SdkLambdaLayerArn
         ResourceGroup: !Sub ${Stack}-${Environment}
+        Stack: !Ref Stack
       Tags:
         - Key: ResourceGroup
           Value: !Sub ${Stack}-${Environment}

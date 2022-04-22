@@ -32,6 +32,8 @@ Parameters:
     Type: String
   ResourceGroup:
     Type: String
+  Stack:
+    Type: String
   # SdkLayerArn:
   #   Type: String
   # SslDomainName:
@@ -40,10 +42,10 @@ Parameters:
   # TestApiKey:
   #   Type: String
   #   Default: ""
-  # ConnectionArn:
-  #   Type: String
-  # FullRepositoryId:
-  #   Type: String
+  ConnectionArn:
+    Type: String
+  FullRepositoryId:
+    Type: String
 
 Resources:
   CodeBuildProject:
@@ -56,23 +58,24 @@ Resources:
         Type: CODEPIPELINE
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
+        PrivilegedMode: true
         Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
         Type: LINUX_CONTAINER
         EnvironmentVariables:
           - Name: Environment
             Value: !Ref Environment
-          - Name: IMAGE_REPO_NAME
-            Value: !Select [1, !Split ["/", !Ref EcrRepositoryArn]]
+          - Name: ECR_REPO_ARN
+            Value: !Ref EcrRepositoryArn
           - Name: AWS_ACCOUNT_ID
             Value: !Ref AWS::AccountId
-          - Name: ContainerName
-            Value: !Sub ${ApplicationName}
+          # - Name: ContainerName
+          #   Value: !Sub ${ApplicationName}
           - Name: DockerUsername
             Type: PARAMETER_STORE
-            Value: /${Environment}/dockerhub/username
+            Value: !Sub /${Stack}-${Environment}/dockerhub/username
           - Name: DockerPassword
             Type: PARAMETER_STORE
-            Value: /${Environment}/dockerhub/password
+            Value: !Sub /${Stack}-${Environment}/dockerhub/password
 
       Source:
         BuildSpec: !Ref BuildSpecPath
@@ -126,7 +129,7 @@ Resources:
               Configuration:
                 ConnectionArn: !Ref ConnectionArn
                 FullRepositoryId: !Ref FullRepositoryId # some-user/my-repo
-                BranchName: !Sub CDO-${Environment}
+                BranchName: !Sub CSS-${Environment}
               OutputArtifacts:
                 - Name: ApiSourceArtifact
               RunOrder: 1
@@ -175,7 +178,7 @@ Resources:
                   {"Environment":"${Environment}",
                   "OutpostBucketName":"${OutpostBucketName}",
                   "ApplicationName":"${ApplicationName}",
-                  "SigningImageUri":{"Fn::GetArtifactAtt":["ApiBuildArtifact","imageUri"]}}
+                  "SigningImageUri": "${EcrRepositoryArn}:latest"}
         # - Name: Approval2
         #   Actions:
         #     - Name: ApproveDeploy

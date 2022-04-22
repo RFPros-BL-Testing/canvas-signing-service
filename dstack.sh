@@ -1,8 +1,8 @@
 # Example command to deploy "liquid" stack, this being the "fileservice" application as the "dev" environment
 
-# ./dstack.sh canvas signing dev liquid-dev
-# ./dstack.sh canvas signing test liquid-dev
-# ./dstack.sh canvas signing prod liquid-prod
+# ./dstack.sh canvas signing-service dev liquid-dev
+# ./dstack.sh canvas signing-service test liquid-dev
+# ./dstack.sh canvas signing-service prod liquid-prod
 
 STACK=$1
 APPLICATION=$2
