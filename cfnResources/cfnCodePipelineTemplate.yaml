@@ -76,7 +76,6 @@ Resources:
           - Name: DockerPassword
             Type: PARAMETER_STORE
             Value: !Sub /${Stack}-${Environment}/dockerhub/password
-
       Source:
         BuildSpec: !Ref BuildSpecPath
         Type: CODEPIPELINE

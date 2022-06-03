@@ -1,0 +1,221 @@
+{
+  "$defs": {
+    "app": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "filename found at location",
+          "type": "string"
+        },
+        "appVersion": {
+          "type": "string"
+        }
+      }
+    },
+    "slotboot": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "filename found at location",
+          "type": "string"
+        },
+        "addr": {
+          "description": "boot loader image address",
+          "type": "string"
+        },
+        "offset": {
+          "type": "string"
+        },
+        "magicValue": {
+          "type": "string"
+        },
+        "headerSize": {
+          "type": "string"
+        },
+        "align": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "size": {
+          "type": "string"
+        }
+      },
+      "required": ["name", "addr", "version"]
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "manifest": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "description": "Fileservice URL containing the manifest for the signing process",
+              "type": "string"
+            }
+          }
+        }
+      },
+      "required": ["url"]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "manifest": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "description": "Fileservice URL containing files for the signing process",
+              "type": "string"
+            },
+            "target": {
+              "type": "string",
+              "enum": ["OTA"]
+            },
+            "partNumber": {
+              "type": "string",
+              "enum": [
+                "450-00011-K1",
+                "450-00038-K1",
+                "450-00039-K1",
+                "450-00054-K1",
+                "MG100"
+              ]
+            },
+            "signingKey": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "description": "Param store key path",
+                  "type": "string"
+                }
+              }
+            },
+            "publicKeys": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "description": "Param store key path",
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "app": {
+              "$ref": "#/$defs/app"
+            }
+          }
+        }
+      },
+      "required": [
+        "signingKey",
+        "publicKeys",
+        "app",
+        "target",
+        "location",
+        "partNumber"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "manifest": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "description": "Fileservice URL containing files for the signing process",
+              "type": "string"
+            },
+            "target": {
+              "type": "string",
+              "enum": ["FullImage"]
+            },
+            "partNumber": {
+              "type": "string",
+              "enum": [
+                "450-00011-K1",
+                "450-00038-K1",
+                "450-00039-K1",
+                "450-00054-K1",
+                "MG100"
+              ]
+            },
+            "signingKey": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "description": "Param store key path",
+                  "type": "string"
+                }
+              }
+            },
+            "publicKeys": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "description": "Param store key path",
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "app": {
+              "$ref": "#/$defs/app"
+            },
+            "immutableBoot": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "description": "filename found at location",
+                  "type": "string"
+                },
+                "counterSlotsVersion": {
+                  "type": "number"
+                },
+                "provisionAddr": {
+                  "type": "string"
+                },
+                "provisionSlotSize": {
+                  "type": "string"
+                }
+              }
+            },
+            "mergeOverlap": {
+              "type": "string",
+              "enum": ["replace"]
+            },
+            "mcuboot": {
+              "type": "object",
+              "properties": {
+                "slot0Boot": {
+                  "$ref": "#/$defs/slotboot"
+                },
+                "slot1Boot": {
+                  "$ref": "#/$defs/slotboot"
+                },
+                "partitionSize": {
+                  "type": "string"
+                }
+              },
+              "required": ["slot0Boot", "partitionSize"]
+            }
+          },
+          "required": [
+            "signingKey",
+            "publicKeys",
+            "app",
+            "location",
+            "partNumber"
+          ]
+        }
+      }
+    }
+  ]
+}

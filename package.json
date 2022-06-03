@@ -16,9 +16,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "async": "^3.2.1",
+    "@aws-sdk/client-ssm": "^3.44.0",
+    "async": "^3.2.3",
     "axios": "^0.24.0",
-    "@aws-sdk/client-ssm": "^3.44.0"
+    "jsonschema": "^1.4.1"
   },
   "devDependencies": {
     "@aws-sdk/client-api-gateway": "^3.41.0",

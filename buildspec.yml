@@ -16,8 +16,8 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t $IMAGE_REPO_NAME:latest --build-arg Type --build-arg Role .
-      - docker tag $ECR_REPO_ARN:latest
+      - docker build -t $ECR_REPO_ARN:latest --build-arg Type --build-arg Role .
+      # - docker tag $ECR_REPO_ARN:latest
       - echo Build completed on `date`
 
   post_build:
@@ -27,7 +27,7 @@ phases:
       - echo Pushing the Docker image...
       - docker push $ECR_REPO_ARN:latest
       # - echo Writing image definitions file...
-      # - printf '[{"name":"%s","imageUri":"%s"}]' $ContainerName $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest > imagedefinitions.json
+      # - printf '[{"name":"%s","imageUri":"%s"}]' $ContainerName $ECR_REPO_ARN:latest > imagedefinitions.json
 
 artifacts:
   type: zip

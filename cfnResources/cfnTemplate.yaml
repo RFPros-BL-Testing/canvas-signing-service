@@ -59,6 +59,15 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:CreateNetworkInterface
+                  - ec2:DeleteNetworkInterface
+                  - ec2:DescribeInstances
+                  - ec2:AttachNetworkInterface
+                Resource: "*"
+
+              - Effect: Allow
+                Action:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                   - ssm:*
@@ -80,12 +89,19 @@ Resources:
       FunctionName: !Join ["_", ["SignFunction", !Ref Environment]]
       Code:
         ImageUri: !Ref SigningImageUri
+      PackageType: Image
       Role: !GetAtt LambdaExecutionRole.Arn
       Timeout: 300
       Environment:
         Variables:
           Environment: !Ref Environment
           FileServiceApi: !Ref FileServiceApi
+          tmpFolder: "/tmp/"
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::ImportValue: !Sub canvas-common-${Environment}-PrivateSecurityGroup
+        SubnetIds:
+          - Fn::ImportValue: !Sub canvas-common-${Environment}-PrivateSubnet1
 
   SignFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -93,3 +109,9 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Join ["", ["/aws/lambda/", !Ref SignFunction]]
+
+  # Api Gateway
+  # Resource
+  # Method
+  # Permission
+  # Deployment
