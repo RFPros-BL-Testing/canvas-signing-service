@@ -84,33 +84,6 @@ Resources:
           Value: !Ref ResourceGroup
       TimeoutInMinutes: 15
 
-  # CodeBuildTestProject:
-  #   Type: AWS::CodeBuild::Project
-  #   Properties:
-  #     Name: !Sub ${ApplicationName}-e2eTest-${Environment}
-  #     ServiceRole: !Ref CodeBuildProjectRoleArn
-  #     EncryptionKey: !Ref KMSKeyArn
-  #     Artifacts:
-  #       Type: CODEPIPELINE
-  #     Environment:
-  #       ComputeType: BUILD_GENERAL1_SMALL
-  #       Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
-  #       Type: LINUX_CONTAINER
-  #       EnvironmentVariables:
-  #         - Name: SslDomainName
-  #           Value: !Ref SslDomainName
-  #           Type: PLAINTEXT
-  #         - Name: TestApiKey
-  #           Value: !Ref TestApiKey
-  #           Type: PLAINTEXT
-  #     Source:
-  #       BuildSpec: buildspec_test.yml
-  #       Type: CODEPIPELINE
-  #     Tags:
-  #       - Key: ResourceGroup
-  #         Value: !Ref ResourceGroup
-  #     TimeoutInMinutes: 15
-
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -178,29 +151,7 @@ Resources:
                   "OutpostBucketName":"${OutpostBucketName}",
                   "ApplicationName":"${ApplicationName}",
                   "SigningImageUri": "${EcrRepositoryArn}:latest"}
-        # - Name: Approval2
-        #   Actions:
-        #     - Name: ApproveDeploy
-        #       ActionTypeId:
-        #         Category: Approval
-        #         Owner: AWS
-        #         Version: 1
-        #         Provider: Manual
-        # - Name: TestApis
-        #   Actions:
-        #     - Name: E2ETest
-        #       ActionTypeId:
-        #         Category: Test
-        #         Owner: AWS
-        #         Version: 1
-        #         Provider: CodeBuild
-        #       Configuration:
-        #         ProjectName: !Ref CodeBuildTestProject
-        #       RunOrder: 1
-        #       InputArtifacts:
-        #         - Name: ApiSourceArtifact
-        #       # OutputArtifacts:
-        #       #   - Name: ApiBuildArtifact
+
       ArtifactStore:
         Type: S3
         Location: !Ref ArtifactBucketName
