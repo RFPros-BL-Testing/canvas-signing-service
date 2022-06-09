@@ -34,10 +34,10 @@ const LoadParameter = function (path, next) {
   client
     .send(command)
     .then((result) => {
-      if (result.Parameter.Type == "SecureString") {
-        let buff = Buffer.from(result.Parameter.Value, "base64");
-        result.Parameter.Value = buff.toString();
-      }
+      // if (result.Parameter.Type == "SecureString") {
+      //   let buff = Buffer.from(result.Parameter.Value, "base64");
+      //   result.Parameter.Value = buff.toString();
+      // }
       next(null, result);
     })
     .catch((error) => {

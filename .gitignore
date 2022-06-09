@@ -2,3 +2,5 @@
 resources/
 
 tmp/
+
+root/sign-test.js
